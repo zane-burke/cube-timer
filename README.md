@@ -1,7 +1,7 @@
 # cube-timer
 A simple program for speedcubing made using the Iced framework.
 
-# Features
+## Features
 
 - Separate inspection and solve timers.
 - A display that shows the 5 most recent solves.
@@ -10,7 +10,7 @@ A simple program for speedcubing made using the Iced framework.
 
 In a future version, I will probably add the ability to save your solves to a file (via the log button), then let you view that file as a graph of your solve times over time.
 
-# Controls
+## Controls
 
 - `Space` lets you start and stop the timers. It does nothing during inspection.
 - `Escape` discards the current solve times. It can stop the inspection timer, as it resets it to 15s.
