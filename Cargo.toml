@@ -1,0 +1,9 @@
+[package]
+name = "cube-timer"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.38"
+iced = { version = "0.12.1", features = ["smol"] }
+rand = "0.8.5"
