@@ -336,7 +336,7 @@ impl Application for CubeTimer {
 
         let controls = column![toggle_button, discard_button].spacing(10);
 
-        let avg_label = text("Average of Last 5: ").font(font_bf);
+        let avg_label = text("Last Five Avg: ").font(font_bf);
         let avg_secs = self.avg.as_secs();
         let avg_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
@@ -344,9 +344,8 @@ impl Application for CubeTimer {
             avg_secs % MINUTE,
             self.avg.subsec_millis() / 10,
         ));
-        let avg_container = container(column![avg_label, avg_display]).width(Length::Fill);
-
-        let atv_label = text("All Time Average: ").font(font_bf);
+        
+        let atv_label = text("All Time Avg: ").font(font_bf);
         let atv_secs = self.atv.as_secs();
         let atv_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
@@ -354,9 +353,8 @@ impl Application for CubeTimer {
             atv_secs % MINUTE,
             self.atv.subsec_millis() / 10,
         ));
-        let atv_container = container(row![atv_label, atv_display]).width(Length::Fill);
-
-        let pb_label = text("Personal Best: ").font(font_bf);
+        
+        let pb_label = text("All-Time PB: ").font(font_bf);
         let pb_secs = self.pb.as_secs();
         let pb_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
@@ -364,7 +362,10 @@ impl Application for CubeTimer {
             pb_secs % MINUTE,
             self.atv.subsec_millis() / 10,
         ));
-        let pb_container = container(row![pb_label, pb_display]).width(Length::Fill);
+
+        let time_labels = container(column![pb_label, atv_label, avg_label].spacing(10));
+        let time_values = container(column![pb_display, atv_display, avg_display].spacing(10));
+        let times_container = container(row![time_labels, time_values].spacing(10)).width(Length::Fill);
 
         let five_label = text("Recent Solves:").font(font_bf);
         let five_content = text(&self.recent);
@@ -386,7 +387,7 @@ impl Application for CubeTimer {
             timer,
             row![
                 column![controls, shuffle].spacing(10),
-                column![pb_container, atv_container, avg_container, five_container].spacing(10)
+                column![times_container, five_container].spacing(10)
             ]
             .spacing(10)
         ]
