@@ -16,7 +16,11 @@ const INSPECTION_TIME: Duration = Duration::from_secs(15);
 const DEFAULT_SHUFFLE_LENGTH: u64 = 25;
 const BIG_FONT_SIZE: u16 = 96;
 
+static ICO_DATA: &[u8] = include_bytes!("../images/cube.png");
+
 fn main() -> iced::Result {
+    let ico = iced::window::icon::from_file_data(ICO_DATA, None).ok();
+
     let settings = Settings {
         window: window::Settings {
             size: iced::Size {
@@ -31,6 +35,7 @@ fn main() -> iced::Result {
             decorations: true,
             position: Position::default(),
             visible: true,
+            icon: ico,
             ..Default::default()
         },
         ..Default::default()
