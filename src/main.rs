@@ -91,13 +91,16 @@ impl Application for CubeTimer {
     type Flags = ();
 
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
+        let cache = saving::read_save();
         (
             Self {
                 inspection: INSPECTION_TIME,
                 finished: false,
                 shuffle_length: DEFAULT_SHUFFLE_LENGTH as f64,
                 shuffle: shuffler(DEFAULT_SHUFFLE_LENGTH),
-                cache: saving::read_save(),
+                atv: saving::all_time_average(&cache),
+                pb: saving::personal_best(&cache),
+                cache,
                 ..Default::default()
             },
             Command::none(),
@@ -333,7 +336,7 @@ impl Application for CubeTimer {
 
         let controls = column![toggle_button, discard_button].spacing(10);
 
-        let avg_label = text("Average of Last 5:").font(font_bf);
+        let avg_label = text("Average of Last 5: ").font(font_bf);
         let avg_secs = self.avg.as_secs();
         let avg_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
@@ -343,7 +346,7 @@ impl Application for CubeTimer {
         ));
         let avg_container = container(column![avg_label, avg_display]).width(Length::Fill);
 
-        let atv_label = text("All Time Average:").font(font_bf);
+        let atv_label = text("All Time Average: ").font(font_bf);
         let atv_secs = self.atv.as_secs();
         let atv_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
@@ -353,13 +356,13 @@ impl Application for CubeTimer {
         ));
         let atv_container = container(row![atv_label, atv_display]).width(Length::Fill);
 
-        let pb_label = text("Personal Best:");
+        let pb_label = text("Personal Best: ").font(font_bf);
         let pb_secs = self.pb.as_secs();
         let pb_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
             (pb_secs % HOUR) / MINUTE,
             pb_secs % MINUTE,
-            self.atv.subsec_micros() / 10,
+            self.atv.subsec_millis() / 10,
         ));
         let pb_container = container(row![pb_label, pb_display]).width(Length::Fill);
 
