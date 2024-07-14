@@ -4,7 +4,7 @@ use iced::window::Position;
 use iced::{alignment, executor, keyboard, time, window, Length};
 use iced::{
     widget::{button, column, container, row, text, Scrollable, Slider},
-    Application, Command, Element, Font, Settings, Subscription, Theme,
+    Alignment, Application, Command, Element, Font, Settings, Subscription, Theme,
 };
 use itertools::Itertools;
 use shuffling::shuffler;
@@ -12,9 +12,10 @@ use std::time::{Duration, Instant};
 
 use chrono::{DateTime, Local};
 
-const INSPECTION_TIME: Duration = Duration::from_secs(1);
+const INSPECTION_TIME: Duration = Duration::from_secs(15);
 const DEFAULT_SHUFFLE_LENGTH: u64 = 25;
-const BIG_FONT_SIZE: u16 = 64;
+const BIG_FONT_SIZE: u16 = 96;
+
 fn main() -> iced::Result {
     let settings = Settings {
         window: window::Settings {
@@ -23,8 +24,8 @@ fn main() -> iced::Result {
                 height: 400.0,
             },
             min_size: Some(iced::Size {
-                width: 440.0,
-                height: 360.0,
+                width: 410.0,
+                height: 370.0,
             }),
             resizable: true,
             decorations: true,
@@ -263,11 +264,11 @@ impl Application for CubeTimer {
         let timer_label = if self.inspection > Duration::ZERO {
             text("Inspection Timer")
                 .font(font_bf)
-                .horizontal_alignment(alignment::Horizontal::Left)
+                .horizontal_alignment(alignment::Horizontal::Center)
         } else {
             text("Solve Timer")
                 .font(font_bf)
-                .horizontal_alignment(alignment::Horizontal::Left)
+                .horizontal_alignment(alignment::Horizontal::Center)
         };
 
         let timer = if self.inspection > Duration::ZERO {
@@ -279,7 +280,7 @@ impl Application for CubeTimer {
                 self.inspection.subsec_millis() / 10,
             ))
             .size(BIG_FONT_SIZE)
-            .horizontal_alignment(alignment::Horizontal::Left)
+            .horizontal_alignment(alignment::Horizontal::Center)
         } else {
             let solve_time = self.solve_time.as_secs();
 
@@ -290,7 +291,7 @@ impl Application for CubeTimer {
                 self.solve_time.subsec_millis() / 10,
             ))
             .size(BIG_FONT_SIZE)
-            .horizontal_alignment(alignment::Horizontal::Left)
+            .horizontal_alignment(alignment::Horizontal::Center)
         };
 
         let toggle_button = {
@@ -342,20 +343,17 @@ impl Application for CubeTimer {
         .width(Length::Fill)
         .height(Length::Fill);
 
-        let keybind_text =
-            text("You can use the left and right arrows to change the shuffle length.");
-
         column![
             timer_label,
             timer,
             row![
-                column![controls, keybind_text,].spacing(10),
-                column![avg_container, five_container, shuffle].spacing(10)
+                column![controls, shuffle].spacing(10),
+                column![avg_container, five_container].spacing(10)
             ]
             .spacing(10)
         ]
-        .spacing(10)
         .padding(10)
+        .align_items(Alignment::Center)
         .into()
     }
 
