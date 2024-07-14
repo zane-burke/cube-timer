@@ -46,3 +46,7 @@ pub fn all_time_average(cache: &[Solve]) -> Duration {
     let itered = cache.iter().map(|slv| slv.solve_time);
     itered.sum::<Duration>() / cache.len() as u32
 }
+
+pub fn personal_best(cache: &[Solve]) -> Duration {
+    cache.iter().map(|slv| slv.solve_time).min().unwrap()
+}

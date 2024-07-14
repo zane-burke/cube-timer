@@ -69,9 +69,10 @@ struct CubeTimer {
     shuffle_length: f64,  // the length of the current shuffle
     shuffle: String,      // the current shuffle
     cache: Vec<Solve>,    // stores the shuffle and time of a given solve
-    recent: String,
-    avg: Duration,
-    atv: Duration,
+    recent: String,       // The formatted string of the 5 most recent solve times
+    avg: Duration, // The average of the 5 most recent runs, but excludes the best and worst runs
+    atv: Duration, // The all-time average of the save file
+    pb: Duration,  // The all-time personal best in the save file
 }
 
 #[derive(Default)]
@@ -187,6 +188,7 @@ impl Application for CubeTimer {
                                 _ => unreachable!("The length can't exceed 5"),
                             };
                             self.atv = saving::all_time_average(&self.cache);
+                            self.pb = saving::personal_best(&self.cache);
                         }
                         State::Inspecting(..) => {} // empty to prevent user actions other than resetting
                         State::Ticking(..) => {
@@ -332,30 +334,34 @@ impl Application for CubeTimer {
         let controls = column![toggle_button, discard_button].spacing(10);
 
         let avg_label = text("Average of Last 5:").font(font_bf);
-
         let avg_secs = self.avg.as_secs();
-
         let avg_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
             (avg_secs % HOUR) / MINUTE,
             avg_secs % MINUTE,
             self.avg.subsec_millis() / 10,
         ));
-
         let avg_container = container(column![avg_label, avg_display]).width(Length::Fill);
 
         let atv_label = text("All Time Average:").font(font_bf);
-
         let atv_secs = self.atv.as_secs();
-
         let atv_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
             (atv_secs % HOUR) / MINUTE,
             atv_secs % MINUTE,
             self.atv.subsec_millis() / 10,
         ));
+        let atv_container = container(row![atv_label, atv_display]).width(Length::Fill);
 
-        let atv_container = container(column![atv_label, atv_display]).width(Length::Fill);
+        let pb_label = text("Personal Best:");
+        let pb_secs = self.pb.as_secs();
+        let pb_display = text(format!(
+            "{:0>2}:{:0>2}.{:0>2}",
+            (pb_secs % HOUR) / MINUTE,
+            pb_secs % MINUTE,
+            self.atv.subsec_micros() / 10,
+        ));
+        let pb_container = container(row![pb_label, pb_display]).width(Length::Fill);
 
         let five_label = text("Recent Solves:").font(font_bf);
         let five_content = text(&self.recent);
@@ -377,7 +383,7 @@ impl Application for CubeTimer {
             timer,
             row![
                 column![controls, shuffle].spacing(10),
-                column![atv_container, avg_container, five_container].spacing(10)
+                column![pb_label, atv_container, avg_container, five_container].spacing(10)
             ]
             .spacing(10)
         ]
