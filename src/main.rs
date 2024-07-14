@@ -383,7 +383,7 @@ impl Application for CubeTimer {
             timer,
             row![
                 column![controls, shuffle].spacing(10),
-                column![pb_label, atv_container, avg_container, five_container].spacing(10)
+                column![pb_container, atv_container, avg_container, five_container].spacing(10)
             ]
             .spacing(10)
         ]
