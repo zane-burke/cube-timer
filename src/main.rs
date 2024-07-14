@@ -1,3 +1,4 @@
+mod saving;
 mod shuffling;
 
 use iced::window::Position;
@@ -10,18 +11,22 @@ use itertools::Itertools;
 use shuffling::shuffler;
 use std::time::{Duration, Instant};
 
-use chrono::{DateTime, Local};
+use chrono::Local;
+
+use saving::Solve;
 
 const INSPECTION_TIME: Duration = Duration::from_secs(15);
 const DEFAULT_SHUFFLE_LENGTH: u64 = 25;
 const BIG_FONT_SIZE: u16 = 96;
+const HOUR: u64 = 3600;
+const MINUTE: u64 = 60;
 
 static ICO_DATA: &[u8] = include_bytes!("../images/cube.png");
 
 fn main() -> iced::Result {
     let ico = iced::window::icon::from_file_data(ICO_DATA, None).ok();
 
-    let settings = Settings {
+    let settings: Settings<()> = Settings {
         window: window::Settings {
             size: iced::Size {
                 width: 520.0,
@@ -63,9 +68,10 @@ struct CubeTimer {
     finished: bool,       // whether the solve is done
     shuffle_length: f64,  // the length of the current shuffle
     shuffle: String,      // the current shuffle
-    cache: Vec<(DateTime<Local>, Duration, String)>, // stores the shuffle and time of a given solve
+    cache: Vec<Solve>,    // stores the shuffle and time of a given solve
     recent: String,
     avg: Duration,
+    atv: Duration,
 }
 
 #[derive(Default)]
@@ -90,6 +96,7 @@ impl Application for CubeTimer {
                 finished: false,
                 shuffle_length: DEFAULT_SHUFFLE_LENGTH as f64,
                 shuffle: shuffler(DEFAULT_SHUFFLE_LENGTH),
+                cache: saving::read_save(),
                 ..Default::default()
             },
             Command::none(),
@@ -116,8 +123,11 @@ impl Application for CubeTimer {
                             }
                         }
                         State::Finished => {
-                            self.cache
-                                .push((Local::now(), self.solve_time, self.shuffle.clone()));
+                            let new_solve =
+                                Solve::new(Local::now(), self.solve_time, self.shuffle.clone());
+                            self.cache.push(new_solve);
+
+                            saving::save_solves(&self.cache);
 
                             self.reset();
 
@@ -126,7 +136,7 @@ impl Application for CubeTimer {
                                 .iter()
                                 .rev()
                                 .take(5)
-                                .map(|(_t, st, _sh)| st)
+                                .map(|sv| &sv.solve_time)
                                 .collect();
 
                             let (min, max) =
@@ -141,8 +151,8 @@ impl Application for CubeTimer {
                                 let secs = last_five[0].as_secs();
                                 let string = format!(
                                     "{:0>2}:{:0>2}.{:0>2}",
-                                    (secs % 60) / 60,
-                                    secs % 60,
+                                    (secs % HOUR) / MINUTE,
+                                    secs % MINUTE,
                                     last_five[0].subsec_millis() / 10,
                                 );
 
@@ -152,8 +162,8 @@ impl Application for CubeTimer {
                                     let tsecs = t.as_secs();
                                     str_accumulator += &format!(
                                         "{:0>2}:{:0>2}.{:0>2}",
-                                        (tsecs % 60) / 60,
-                                        tsecs % 60,
+                                        (tsecs % HOUR) / MINUTE,
+                                        tsecs % MINUTE,
                                         t.subsec_millis() / 10,
                                     );
 
@@ -176,6 +186,7 @@ impl Application for CubeTimer {
                                 5 => (sum - *max - *min) / 3,
                                 _ => unreachable!("The length can't exceed 5"),
                             };
+                            self.atv = saving::all_time_average(&self.cache);
                         }
                         State::Inspecting(..) => {} // empty to prevent user actions other than resetting
                         State::Ticking(..) => {
@@ -221,8 +232,11 @@ impl Application for CubeTimer {
                 self.state = State::Idle;
 
                 if self.solve_time > Duration::ZERO {
-                    self.cache
-                        .push((Local::now(), self.solve_time, self.shuffle.clone()));
+                    self.cache.push(Solve::new(
+                        Local::now(),
+                        self.solve_time,
+                        self.shuffle.clone(),
+                    ));
                 }
 
                 self.reset()
@@ -257,9 +271,6 @@ impl Application for CubeTimer {
     }
 
     fn view(&self) -> Element<Message> {
-        const MIN: u64 = 60;
-        const HR: u64 = 60 * MIN;
-
         let font_bf = Font {
             family: iced::font::Family::SansSerif,
             weight: iced::font::Weight::Bold,
@@ -281,7 +292,7 @@ impl Application for CubeTimer {
 
             text(format!(
                 "{:0>2}.{:0>2}",
-                inspection_time % MIN,
+                inspection_time % MINUTE,
                 self.inspection.subsec_millis() / 10,
             ))
             .size(BIG_FONT_SIZE)
@@ -291,8 +302,8 @@ impl Application for CubeTimer {
 
             text(format!(
                 "{:0>2}:{:0>2}.{:0>2}",
-                (solve_time % HR) / MIN,
-                solve_time % MIN,
+                (solve_time % HOUR) / MINUTE,
+                solve_time % MINUTE,
                 self.solve_time.subsec_millis() / 10,
             ))
             .size(BIG_FONT_SIZE)
@@ -320,18 +331,31 @@ impl Application for CubeTimer {
 
         let controls = column![toggle_button, discard_button].spacing(10);
 
-        let avg_label = text("Average:").font(font_bf);
+        let avg_label = text("Average of Last 5:").font(font_bf);
 
         let avg_secs = self.avg.as_secs();
 
         let avg_display = text(format!(
             "{:0>2}:{:0>2}.{:0>2}",
-            (avg_secs % HR) / MIN,
-            avg_secs % MIN,
+            (avg_secs % HOUR) / MINUTE,
+            avg_secs % MINUTE,
             self.avg.subsec_millis() / 10,
         ));
 
         let avg_container = container(column![avg_label, avg_display]).width(Length::Fill);
+
+        let atv_label = text("All Time Average:").font(font_bf);
+
+        let atv_secs = self.atv.as_secs();
+
+        let atv_display = text(format!(
+            "{:0>2}:{:0>2}.{:0>2}",
+            (atv_secs % HOUR) / MINUTE,
+            atv_secs % MINUTE,
+            self.atv.subsec_millis() / 10,
+        ));
+
+        let atv_container = container(column![atv_label, atv_display]).width(Length::Fill);
 
         let five_label = text("Recent Solves:").font(font_bf);
         let five_content = text(&self.recent);
@@ -353,7 +377,7 @@ impl Application for CubeTimer {
             timer,
             row![
                 column![controls, shuffle].spacing(10),
-                column![avg_container, five_container].spacing(10)
+                column![atv_container, avg_container, five_container].spacing(10)
             ]
             .spacing(10)
         ]
