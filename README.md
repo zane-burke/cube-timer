@@ -12,8 +12,6 @@ In a future version, I will probably add the ability to save your solves to a fi
 
 ## Controls
 
-- `Space` lets you start and stop the timers. It does nothing during inspection.
-- `Escape` discards the current solve times. It can stop the inspection timer, as it resets it to 15s.
-- `L` logs your solve time to the display.
-- `←` decrements the number of moves in the displayed shuffle.
-- `→` incremements the number of moves in the displayed shuffle.
+- `Space` lets you start and stop the timers. Once you have completed a solve, you are able to press it again to log the solve. It does nothing during inspection.
+- `Escape` discards the current solve times. If you do not want to log a particular time, this is the button you should press instead of `Space`. It can stop the inspection timer, as it resets it to 15s.
+- `←` and `→` are an alternate way of controlling the number of moves in the displayed shuffle. 
