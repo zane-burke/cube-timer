@@ -11,9 +11,19 @@ const HISTORY_KEY: &str = "zane-burke.cube-timer.history.self";
 
 #[derive(Serialize, Deserialize, Eq, Clone)]
 pub struct Solve {
-    pub timestamp: String,
+    pub timestamp: u64,
     pub solvetime: u64,
     pub shuffle: String,
+}
+
+impl Solve {
+    pub fn new(timestamp: u64, solvetime: u64, shuffle: String) -> Self {
+        Self {
+            timestamp,
+            solvetime,
+            shuffle,
+        }
+    }
 }
 
 impl Ord for Solve {
@@ -45,58 +55,65 @@ impl History {
             history: Vec::new(),
         }
     }
-    pub fn add(&mut self, solve: Solve) {
-        self.history.push(solve);
+}
+
+/// adds a single solve to local storage
+pub fn save_solve(solve: Solve) {
+    let mut history = retrieve_history();
+    history.history.push(solve);
+    set_history(history);
+}
+
+/// Gets the personal best
+pub fn get_pb() -> u64 {
+    let history = retrieve_history().history;
+
+    match history.iter().min() {
+        Some(s) => s.solvetime,
+        None => u64::MIN,
+    }
+}
+
+/// Gets the average of the last five, minus the best and worst solves
+pub fn get_ao5() -> u64 {
+    let history = retrieve_history().history;
+    let last_five: Vec<u64> = history
+        .iter()
+        .rev()
+        .take(5)
+        .map(|sv| sv.solvetime)
+        .collect();
+
+    let length = last_five.len();
+
+    // prevent further calculations of there isn't enough data to go off of
+    if length <= 2 {
+        return 0;
     }
 
-    /// Gets the personal best
-    pub fn get_pb(&self) -> u64 {
-        match self.history.iter().min() {
-            Some(s) => s.solvetime,
-            None => u64::MIN,
-        }
-    }
+    let (min, max) = last_five.iter().copied().minmax().into_option().unwrap();
 
-    /// Gets the average of the last five, minus the best and worst solves
-    pub fn get_ao5(&self) -> u64 {
-        let last_five: Vec<u64> = self
-            .history
-            .iter()
-            .rev()
-            .take(5)
-            .map(|sv| sv.solvetime)
-            .collect();
+    let sum: u64 = last_five.iter().copied().sum();
 
-        let length = last_five.len();
+    (sum - max - min) / length as u64
+}
 
-        // prevent further calculations of there isn't enough data to go off of
-        if length <= 2 {
-            return 0;
-        }
+/// Gets the user's all-time average solve time
+pub fn get_avg() -> u64 {
+    let history = retrieve_history().history;
+    let length = history.len();
+    let sum: u64 = history.iter().map(|sv| sv.solvetime).sum();
 
-        let (min, max) = last_five.iter().copied().minmax().into_option().unwrap();
+    utils::saturating_div(sum, length as u64)
+}
 
-        let sum: u64 = last_five.iter().copied().sum();
+/// Sets the user solve history to the provided value
+pub fn set_history(history: History) {
+    LocalStorage::set(HISTORY_KEY, history).expect("Failed to update");
+}
 
-        (sum - max - min) / length as u64
-    }
-
-    /// Gets the user's all-time average solve time
-    pub fn get_avg(&self) -> u64 {
-        let length = self.history.len();
-        let sum: u64 = self.history.iter().map(|sv| sv.solvetime).sum();
-
-        utils::saturating_div(sum, length as u64)
-    }
-
-    /// Retrieves the user solve history.
-    /// Creates a new entry if there isn't one available.
-    pub fn retrieve_history() -> Self {
-        LocalStorage::get(HISTORY_KEY).unwrap_or_else(|_| Self::new())
-    }
-
-    /// Sets the user solve history to the provided value
-    pub fn update_history(&self) {
-        LocalStorage::set(HISTORY_KEY, self).expect("Failed to update");
-    }
+/// Retrieves the user solve history.
+/// Creates a new entry if there isn't one available.
+pub fn retrieve_history() -> History {
+    LocalStorage::get(HISTORY_KEY).unwrap_or_else(|_| History::new())
 }
