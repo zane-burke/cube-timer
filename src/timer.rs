@@ -1,8 +1,9 @@
 //! Main interface.
 //! Consists of both the timer and a shuffling screen.
 
+use crate::history;
 use crate::shuffle::{Shuffle, ShuffleDisplay};
-use crate::utils::{chunk_vec, dec_time, inc_time};
+use crate::utils;
 use gloo::events::EventListener;
 use gloo::timers::callback::Interval;
 use wasm_bindgen::UnwrapThrowExt;
@@ -10,25 +11,20 @@ use web_sys::wasm_bindgen::JsCast;
 use yew::{classes, html, Component, Context, Html, KeyboardEvent, Properties};
 
 pub struct Timer {
-    pub _standalone: Interval,
-    pub start_time: Option<u64>,
-    pub current_time: String,
-    pub stage: Stage,
-    pub toggle_label: String,
-    pub listener: Option<EventListener>,
-    pub shuffle: Shuffle,
+    pub _time_handler: Interval,           // interval for updating time
+    pub start_time: Option<u64>,         // stores the start time of the solve
+    pub current_time: String,            // used to display the current time
+    pub end_time: Option<u64>,           // stores the time at which the user ends the solve
+    pub stage: Stage,                    // the current stage of the solve
+    pub toggle_label: String,            // the label used on the toggle button
+    pub listener: Option<EventListener>, // event listener for `space` and `r`
+    pub shuffle: Shuffle,                // info about the shuffle
 }
 
 #[derive(Clone, PartialEq, Eq, Properties)]
 pub struct TimerProps {
     pub dark: bool,
 }
-
-pub const INSPECTION_TIME: u64 = 15_000;
-
-const SECOND: u64 = 1_000;
-const MINUTE: u64 = 60 * SECOND;
-const HOUR: u64 = 60 * MINUTE;
 
 pub enum Message {
     ToggleTimer,
@@ -57,9 +53,10 @@ impl Component for Timer {
         };
 
         Self {
-            _standalone: handle,
+            _time_handler: handle,
             start_time: None,
             current_time: String::from("00:15.00"),
+            end_time: None,
             stage: Stage::Shuffle,
             toggle_label: String::from("Inspect (Space)"),
             listener: None,
@@ -88,7 +85,7 @@ impl Component for Timer {
                     Stage::Inspection => match self.start_time {
                         Some(_) => {
                             self.current_time = {
-                                let res = dec_time(self.start_time);
+                                let res = utils::dec_time(self.start_time);
 
                                 if res == 0 {
                                     self.stage = Stage::Solve;
@@ -96,13 +93,15 @@ impl Component for Timer {
                                     self.toggle_label = String::from("Begin (Space)")
                                 }
 
-                                time_string(res)
+                                utils::time_string(res)
                             }
                         }
                         None => self.current_time = String::from("00:15.00"),
                     },
                     Stage::Solve => match self.start_time {
-                        Some(_) => self.current_time = time_string(inc_time(self.start_time)),
+                        Some(_) => {
+                            self.current_time = utils::time_string(utils::inc_time(self.start_time))
+                        }
                         None => self.current_time = String::from("00:00.00"),
                     },
                     // Catches Shuffle and Finished and does nothing with them
@@ -153,6 +152,7 @@ impl Timer {
     fn reset(&mut self) {
         self.stage = Stage::Shuffle;
         self.start_time = None;
+        self.end_time = None;
         self.current_time = String::from("00:15.00");
         self.toggle_label = String::from("Inspect (Space)");
     }
@@ -166,38 +166,27 @@ impl Timer {
                 Some(_) => {}
                 None => {
                     self.toggle_label = String::from("Inspecting!");
-                    self.start_time = Some(js_sys::Date::new_0().get_time() as u64);
+                    self.start_time = Some(utils::get_current_time());
                 }
             },
             Stage::Solve => match self.start_time {
                 Some(_) => {
+                    self.end_time = Some(utils::get_current_time());
                     self.stage = Stage::Finished;
                     self.toggle_label = String::from("Log Solve (Space)");
                 }
                 None => {
                     self.toggle_label = String::from("Stop (Space)");
-                    self.start_time = Some(js_sys::Date::new_0().get_time() as u64);
+                    self.start_time = Some(utils::get_current_time());
                 }
             },
             Stage::Finished => {
+                let solvetime = utils::saturating_unwrap_sub(self.end_time, self.start_time);
+                history::save_solve(history::Solve::new(self.end_time.unwrap(), solvetime, self.shuffle.sequence.join(", ")));
                 self.reset();
             }
         }
     }
-}
-
-// formats a `u64` time into a pretty string
-pub fn time_string(time: u64) -> String {
-    let min = (time / MINUTE) % 60; // convert time to the right unit then mod 60 to prevent overflow
-    let s = (time / SECOND) % 60;
-    let ms = (time % SECOND) / 10;
-
-    if time >= HOUR {
-        let hr = time / HOUR;
-        return format!("{:0>2}:{:0>2}:{:0>2}.{:0>2}", hr, min, s, ms).to_string();
-    }
-
-    format!("{:0>2}:{:0>2}.{:0>2}", min, s, ms).to_string()
 }
 
 // html rendering
@@ -237,7 +226,7 @@ impl Timer {
                     />
                     if !self.shuffle.error.is_empty() {<span class={classes!("err-msg", dark_mode)}>{ &self.shuffle.error }</span>}
 
-                    if !self.shuffle.sequence.is_empty() { <ShuffleDisplay dark={dm} shuffle={chunk_vec(&self.shuffle.sequence)}/> }
+                    if !self.shuffle.sequence.is_empty() { <ShuffleDisplay dark={dm} shuffle={utils::chunk_vec(&self.shuffle.sequence)}/> }
                 </div>
                 <div class={"flex-row-container"}>
                     <button class={classes!("timer-button", "toggle", dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ "Use and Continue (Space)" } </button>
