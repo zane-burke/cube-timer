@@ -1,15 +1,18 @@
 #![recursion_limit = "1024"]
+
 mod saving;
 mod seq_gen;
 mod stats;
 mod timer;
+mod utils;
+mod shuffle;
 
 use yew::html;
 use yew::{classes, html::Scope, Component, Context, Html};
 use yew_router::{prelude::Link, BrowserRouter, Routable, Switch};
 
-use stats::Stats;
-use timer::Timer;
+use crate::stats::Stats;
+use crate::timer::Timer;
 
 fn main() {
     console_error_panic_hook::set_once();
