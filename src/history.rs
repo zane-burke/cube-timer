@@ -95,7 +95,7 @@ pub fn get_ao5() -> u64 {
 
     let sum: u64 = last_five.iter().copied().sum();
 
-    (sum - max - min) / length as u64
+    utils::saturating_div(sum - max - min, length as u64)
 }
 
 /// Gets the user's all-time average solve time
