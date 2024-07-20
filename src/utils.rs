@@ -38,3 +38,8 @@ pub fn inc_time(start_time: Option<u64>) -> u64 {
 
     c - s
 }
+
+/// splits the shuffle sequence into vecs of length 5
+pub fn chunk_vec(shuffle: &Vec<String>) -> Vec<Vec<String>> {
+    shuffle.chunks(5).map(|s| s.into()).collect()
+}
