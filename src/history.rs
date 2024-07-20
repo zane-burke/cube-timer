@@ -86,7 +86,7 @@ pub fn get_ao5() -> u64 {
 
     let length = last_five.len();
 
-    // prevent further calculations of there isn't enough data to go off of
+    // prevent further calculations of there isn't enough data to go off of (also means division is safe)
     if length <= 2 {
         return 0;
     }
@@ -95,7 +95,7 @@ pub fn get_ao5() -> u64 {
 
     let sum: u64 = last_five.iter().copied().sum();
 
-    utils::saturating_div(sum - max - min, length as u64)
+    (sum - max - min) / length as u64
 }
 
 /// Gets the user's all-time average solve time
