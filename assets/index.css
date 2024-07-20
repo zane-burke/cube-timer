@@ -112,6 +112,23 @@ body.dark {
   text-decoration: none;
 }
 
+.timer-button.disabled {
+    background-color: var(--latte-overlay-2);
+}
+
+.timer-button.dark.disabled {
+    background-color: var(--macchiato-overlay-2);
+}
+
+.timer-button.disabled:hover {
+    cursor: not-allowed;
+    background-color: var(--latte-overlay-2);
+}
+
+.timer-button.disabled.dark:hover {
+    background-color: var(--macchiato-overlay-2);
+}
+
 .timer-button:hover {
   cursor: pointer;
 }
