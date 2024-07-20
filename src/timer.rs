@@ -1,11 +1,12 @@
-use crate::seq_gen;
+use crate::utils::{dec_time, inc_time};
+use crate::shuffle::Shuffle;
 use gloo::timers::callback::Interval;
 use gloo::{events::EventListener, utils::document};
 use wasm_bindgen::UnwrapThrowExt;
-use web_sys::{wasm_bindgen::JsCast, HtmlInputElement, Node};
+use web_sys::{wasm_bindgen::JsCast, Node};
 use yew::{
     classes, function_component, html, Component, Context, Html,
-    KeyboardEvent, NodeRef, Properties,
+    KeyboardEvent, Properties,
 };
 
 pub struct Timer {
@@ -15,15 +16,7 @@ pub struct Timer {
     pub stage: Stage,
     pub toggle_label: String,
     pub listener: Option<EventListener>,
-    pub shuffle: Vec<String>,
-    pub shuffle_length: u64,
-    pub shuffle_error: String,
-    pub shuffle_ref: NodeRef,
-    // pub solve_time:
-    //
-    //
-    //
-    //
+    pub shuffle: Shuffle,
 }
 
 #[derive(Clone, PartialEq, Eq, Properties)]
@@ -31,7 +24,7 @@ pub struct TimerProps {
     pub dark: bool,
 }
 
-const INSPECTION_TIME: u64 = 15_000;
+pub const INSPECTION_TIME: u64 = 15_000;
 
 const SECOND: u64 = 1_000;
 const MINUTE: u64 = 60 * SECOND;
@@ -70,10 +63,7 @@ impl Component for Timer {
             stage: Stage::Shuffle,
             toggle_label: String::from("Inspect (Space)"),
             listener: None,
-            shuffle: seq_gen::shuffler(25), // this should be changed to get a value from local storage to prevent changing the user's preferences
-            shuffle_length: 25,
-            shuffle_ref: NodeRef::default(),
-            shuffle_error: String::new(),
+            shuffle: Shuffle::default(),
         }
     }
 
@@ -85,7 +75,7 @@ impl Component for Timer {
                 true
             }
             Message::GenerateShuffle => {
-                self.generate_shuffle();
+                self.shuffle.generate_shuffle();
                 true
             }
             Message::LogSolve => true,
@@ -98,7 +88,7 @@ impl Component for Timer {
                     Stage::Inspection => match self.start_time {
                         Some(_) => {
                             self.current_time = {
-                                let res = self.dec_time();
+                                let res = dec_time(self.start_time);
 
                                 if res == 0 {
                                     self.stage = Stage::Solve;
@@ -112,7 +102,7 @@ impl Component for Timer {
                         None => self.current_time = String::from("00:15.00"),
                     },
                     Stage::Solve => match self.start_time {
-                        Some(_) => self.current_time = time_string(self.inc_time()),
+                        Some(_) => self.current_time = time_string(inc_time(self.start_time)),
                         None => self.current_time = String::from("00:00.00"),
                     },
                     // Catches Shuffle and Finished and does nothing with them
@@ -125,7 +115,7 @@ impl Component for Timer {
                 match event.key().as_str() {
                     " " => self.handle_toggle(),
                     "r" | "R" => match self.stage {
-                        Stage::Shuffle => self.generate_shuffle(),
+                        Stage::Shuffle => self.shuffle.generate_shuffle(),
                         _ => self.reset(),
                     },
                     _ => {}
@@ -167,27 +157,6 @@ impl Timer {
         self.toggle_label = String::from("Inspect (Space)");
     }
 
-    fn get_current_time() -> String {
-        let date = js_sys::Date::new_0();
-        date.get_time().to_string()
-    }
-
-    // decreases time
-    fn dec_time(&self) -> u64 {
-        let c = js_sys::Date::new_0().get_time() as u64;
-        let s = self.start_time.unwrap_or(0) + INSPECTION_TIME;
-
-        saturating_sub(s, c)
-    }
-
-    // increases time
-    fn inc_time(&self) -> u64 {
-        let c = js_sys::Date::new_0().get_time() as u64;
-        let s = self.start_time.unwrap_or(0);
-
-        c - s
-    }
-
     fn handle_toggle(&mut self) {
         match self.stage {
             Stage::Shuffle => {
@@ -206,7 +175,7 @@ impl Timer {
                     self.toggle_label = String::from("Log Solve (Space)");
                 }
                 None => {
-                    self.toggle_label = String::from("Solving!");
+                    self.toggle_label = String::from("Stop (Space)");
                     self.start_time = Some(js_sys::Date::new_0().get_time() as u64);
                 }
             },
@@ -214,35 +183,6 @@ impl Timer {
                 self.reset();
             }
         }
-    }
-
-    fn generate_shuffle(&mut self) {
-        let length_ref = &self.shuffle_ref;
-        let length_value = length_ref.cast::<HtmlInputElement>().unwrap().value();
-
-        match length_value.parse::<u64>() {
-            Ok(r) => {
-                self.shuffle_error.clear();
-                self.shuffle_length = r;
-            },
-            Err(e) => {
-                if length_value.is_empty() {
-                    self.shuffle_length = 25;
-                } else {
-                    self.shuffle_error = format!("Invalid input: {}", e);
-                }
-            }
-        }
-
-        self.shuffle = seq_gen::shuffler(self.shuffle_length);
-    }
-}
-
-pub fn saturating_sub(lhs: u64, rhs: u64) -> u64 {
-    if rhs > lhs {
-        0
-    } else {
-        lhs - rhs
     }
 }
 
@@ -264,6 +204,7 @@ pub fn time_string(time: u64) -> String {
 impl Timer {
     fn view_timer(&self, ctx: &Context<Self>) -> Html {
         let dark_mode = ctx.props().dark.then_some("dark");
+        let disable_toggle = (&self.toggle_label == "Inspecting!").then_some("disabled");
 
         html! {
             <>
@@ -271,7 +212,7 @@ impl Timer {
                     <span class={classes!("timer", dark_mode)}>{ &self.current_time }</span>
                 </div>
                 <div class={"flex-row-container"}>
-                    <button class={classes!("timer-button", "toggle", dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ &self.toggle_label } </button>
+                    <button class={classes!("timer-button", "toggle", disable_toggle, dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ &self.toggle_label } </button>
                     <button class={classes!("timer-button", "reset", dark_mode)} onclick={ctx.link().callback(|_| Message::Discard)}>{ "Reset (r)" } </button>
                 </div>
             </>
@@ -287,15 +228,15 @@ impl Timer {
                     <span class="span-label">{"Shuffle"}</span>
                     <input
                         type="text"
-                        ref={&self.shuffle_ref}
+                        ref={&self.shuffle.node_ref}
                         class={classes!("text-box", dark_mode)}
                         placeholder="25"
                         onchange={ctx.link().callback(|_| Message::GenerateShuffle)}
                     />
-                    if !self.shuffle_error.is_empty() {<span class={classes!("err-msg", dark_mode)}>{ &self.shuffle_error }</span>}
+                    if !self.shuffle.error.is_empty() {<span class={classes!("err-msg", dark_mode)}>{ &self.shuffle.error }</span>}
 
-                    if !self.shuffle.is_empty() {
-                        <ShuffleDisplay dark={ctx.props().dark} shuffle={split_shuffle_vec(&self.shuffle)}/>
+                    if !self.shuffle.sequence.is_empty() {
+                        <ShuffleDisplay dark={ctx.props().dark} shuffle={split_shuffle_vec(&self.shuffle.sequence)}/>
                     }
                 </div>
                 <div class={"flex-row-container"}>
@@ -357,7 +298,5 @@ fn ShuffleDisplay(props: &ShuffleDisplayProps) -> Html {
 }
 
 fn split_shuffle_vec(shuffle: &Vec<String>) -> Vec<Vec<String>> {
-    let length = shuffle.len();
-
     shuffle.chunks(5).map(|s| s.into()).collect()
 }
