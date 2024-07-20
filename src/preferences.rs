@@ -24,7 +24,9 @@ impl Default for Preferences {
 /// setter for the theme
 /// Also updates the preferences in local storage
 pub fn set_theme(dark: bool) {
-    LocalStorage::set(PREFERENCES_KEY, dark).expect("Failed to update theme preference");
+    let mut prefs = get_preferences();
+    prefs.dark_mode = dark;
+    LocalStorage::set(PREFERENCES_KEY, prefs).expect("Failed to update theme preference");
 }
 
 /// getter for the theme
@@ -36,7 +38,9 @@ pub fn get_theme() -> bool {
 /// setter for the shuffle length
 /// Also updates the preferences in local storage
 pub fn set_length(length: u64) {
-    LocalStorage::set(PREFERENCES_KEY, length).expect("Failed to update length preference");
+    let mut prefs = get_preferences();
+    prefs.shuffle_length = length;
+    LocalStorage::set(PREFERENCES_KEY, prefs).expect("Failed to update length preference");
 }
 
 /// getter for the shuffle length
