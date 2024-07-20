@@ -1,18 +1,18 @@
-use crate::utils::{dec_time, inc_time};
-use crate::shuffle::Shuffle;
+//! Main interface.
+//! Consists of both the timer and a shuffling screen.
+
+use crate::shuffle::{Shuffle, ShuffleDisplay};
+use crate::utils::{chunk_vec, dec_time, inc_time};
+use gloo::events::EventListener;
 use gloo::timers::callback::Interval;
-use gloo::{events::EventListener, utils::document};
 use wasm_bindgen::UnwrapThrowExt;
-use web_sys::{wasm_bindgen::JsCast, Node};
-use yew::{
-    classes, function_component, html, Component, Context, Html,
-    KeyboardEvent, Properties,
-};
+use web_sys::wasm_bindgen::JsCast;
+use yew::{classes, html, Component, Context, Html, KeyboardEvent, Properties};
 
 pub struct Timer {
+    pub _standalone: Interval,
     pub start_time: Option<u64>,
     pub current_time: String,
-    pub _standalone: Interval,
     pub stage: Stage,
     pub toggle_label: String,
     pub listener: Option<EventListener>,
@@ -57,9 +57,9 @@ impl Component for Timer {
         };
 
         Self {
+            _standalone: handle,
             start_time: None,
             current_time: String::from("00:15.00"),
-            _standalone: handle,
             stage: Stage::Shuffle,
             toggle_label: String::from("Inspect (Space)"),
             listener: None,
@@ -189,12 +189,12 @@ impl Timer {
 // formats a `u64` time into a pretty string
 pub fn time_string(time: u64) -> String {
     let min = (time / MINUTE) % 60; // convert time to the right unit then mod 60 to prevent overflow
-    let s = (time / SECOND) % 60; 
+    let s = (time / SECOND) % 60;
     let ms = (time % SECOND) / 10;
 
     if time >= HOUR {
         let hr = time / HOUR;
-        return format!("{:0>2}:{:0>2}:{:0>2}.{:0>2}", hr, min, s, ms).to_string()
+        return format!("{:0>2}:{:0>2}:{:0>2}.{:0>2}", hr, min, s, ms).to_string();
     }
 
     format!("{:0>2}:{:0>2}.{:0>2}", min, s, ms).to_string()
@@ -204,6 +204,7 @@ pub fn time_string(time: u64) -> String {
 impl Timer {
     fn view_timer(&self, ctx: &Context<Self>) -> Html {
         let dark_mode = ctx.props().dark.then_some("dark");
+
         let disable_toggle = (&self.toggle_label == "Inspecting!").then_some("disabled");
 
         html! {
@@ -220,7 +221,8 @@ impl Timer {
     }
 
     fn view_shuffle(&self, ctx: &Context<Self>) -> Html {
-        let dark_mode = ctx.props().dark.then_some("dark");
+        let dm = ctx.props().dark;
+        let dark_mode = dm.then_some("dark");
 
         html! {
             <div class={classes!("flex-col-container", dark_mode)}>
@@ -230,14 +232,12 @@ impl Timer {
                         type="text"
                         ref={&self.shuffle.node_ref}
                         class={classes!("text-box", dark_mode)}
-                        placeholder="25"
+                        placeholder={self.shuffle.length.to_string()}
                         onchange={ctx.link().callback(|_| Message::GenerateShuffle)}
                     />
                     if !self.shuffle.error.is_empty() {<span class={classes!("err-msg", dark_mode)}>{ &self.shuffle.error }</span>}
 
-                    if !self.shuffle.sequence.is_empty() {
-                        <ShuffleDisplay dark={ctx.props().dark} shuffle={split_shuffle_vec(&self.shuffle.sequence)}/>
-                    }
+                    if !self.shuffle.sequence.is_empty() { <ShuffleDisplay dark={dm} shuffle={chunk_vec(&self.shuffle.sequence)}/> }
                 </div>
                 <div class={"flex-row-container"}>
                     <button class={classes!("timer-button", "toggle", dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ "Use and Continue (Space)" } </button>
@@ -246,57 +246,4 @@ impl Timer {
             </div>
         }
     }
-}
-
-#[derive(Properties, PartialEq)]
-pub struct ShuffleDisplayProps {
-    shuffle: Vec<Vec<String>>,
-    dark: bool,
-}
-
-#[function_component]
-fn ShuffleDisplay(props: &ShuffleDisplayProps) -> Html {
-    let shuffle = &props.shuffle;
-
-    let node = {
-        let table = document().create_element("table").unwrap();
-        table.class_list().add_1("shuffle-table").unwrap();
-
-        if props.dark {
-            table.class_list().add_1("dark").unwrap();
-        }
-
-        let table_body = document().create_element("tbody").unwrap();
-
-        shuffle.iter().for_each(|row_data| {
-            let row = document().create_element("tr").unwrap();
-
-            row_data.iter().for_each(|cell_data| {
-                let cell = document().create_element("td").unwrap();
-                
-                cell.class_list().add_1("shuffle-cell").unwrap();
-
-                if props.dark {
-                    cell.class_list().add_1("dark").unwrap();
-                }
-
-                cell.append_child(&document().create_text_node(cell_data))
-                    .unwrap();
-                row.append_child(&cell).unwrap();
-            });
-
-            table_body.append_child(&row).unwrap();
-        });
-
-        table.append_child(&table_body).unwrap();
-
-        let node: Node = table.into();
-        Html::VRef(node)
-    };
-
-    node
-}
-
-fn split_shuffle_vec(shuffle: &Vec<String>) -> Vec<Vec<String>> {
-    shuffle.chunks(5).map(|s| s.into()).collect()
 }
