@@ -1,48 +1,45 @@
-use yew::{classes, html, AttrValue, Callback, Component, Context, Html, NodeRef, Properties};
+use web_sys::HtmlInputElement;
+use yew::NodeRef;
 
-#[derive(Properties, PartialEq)]
-pub struct ShuffleProps {
-    pub onchange: Callback<()>,
-    pub placeholder: AttrValue,
-    pub input_ref: NodeRef,
-    pub dark: bool,
+use crate::seq_gen;
+
+pub struct Shuffle {
+    pub sequence: Vec<String>,
+    pub length: u64,
+    pub error: String,
+    pub node_ref: NodeRef,
 }
 
-pub struct Shuffle;
-
-enum Message {
-    Changed,
-}
-
-impl Component for Shuffle {
-    type Message = Message;
-    type Properties = ShuffleProps;
-
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self
+impl Default for Shuffle {
+    fn default() -> Self {
+        Self {
+            sequence: seq_gen::shuffler(25),
+            length: 25,
+            error: String::new(),
+            node_ref: NodeRef::default(),
+        }
     }
+}
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Message::Changed => {
-                ctx.props().onchange.emit(());
-                false
+impl Shuffle {
+    pub fn generate_shuffle(&mut self) {
+        let length_ref = &self.node_ref;
+        let length_value = length_ref.cast::<HtmlInputElement>().unwrap().value();
+
+        match length_value.parse::<u64>() {
+            Ok(r) => {
+                self.error.clear();
+                self.length = r;
+            },
+            Err(e) => {
+                if length_value.is_empty() {
+                    self.length = 25;
+                } else {
+                    self.error = format!("Invalid input: {}", e);
+                }
             }
         }
-    }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let dark_mode = ctx.props().dark.then_some("dark");
-        let placeholder = ctx.props().placeholder.clone();
-
-        html! {
-            <input
-                ref={&ctx.props().input_ref}
-                type="text"
-                class={classes!("text-box", dark_mode)}
-                placeholder={placeholder}
-                onchange={ctx.link().callback(|_| Message::Changed)}
-                />
-        }
+        self.sequence = seq_gen::shuffler(self.length);
     }
 }
