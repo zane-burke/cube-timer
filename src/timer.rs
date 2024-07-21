@@ -29,7 +29,6 @@ pub struct TimerProps {
 pub enum Message {
     ToggleTimer,
     GenerateShuffle,
-    LogSolve,
     Discard,
     UpdateTime,
     KeyPress { event: KeyboardEvent },
@@ -75,7 +74,6 @@ impl Component for Timer {
                 self.shuffle.generate_shuffle();
                 true
             }
-            Message::LogSolve => true,
             Message::Discard => {
                 self.reset();
                 true
@@ -198,12 +196,13 @@ impl Timer {
 
         html! {
             <>
-                <div class={classes!("flex-row-container", dark_mode)}>
+                <div class={classes!("flex-col-container", dark_mode)}>
+                    <span class="span-label">{ &self.stage.as_str() }</span>
                     <span class={classes!("timer", dark_mode)}>{ &self.current_time }</span>
                 </div>
                 <div class={"flex-row-container"}>
-                    <button class={classes!("timer-button", "toggle", disable_toggle, dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ &self.toggle_label } </button>
-                    <button class={classes!("timer-button", "reset", dark_mode)} onclick={ctx.link().callback(|_| Message::Discard)}>{ "Reset (r)" } </button>
+                    <button class={classes!("common-button", "toggle", disable_toggle, dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ &self.toggle_label } </button>
+                    <button class={classes!("common-button", "danger", dark_mode)} onclick={ctx.link().callback(|_| Message::Discard)}>{ "Reset (r)" } </button>
                 </div>
             </>
         }
@@ -216,7 +215,7 @@ impl Timer {
         html! {
             <div class={classes!("flex-col-container", dark_mode)}>
                 <div class={classes!("flex-col-container", dark_mode)}>
-                    <span class="span-label">{"Shuffle"}</span>
+                    <span class="span-label">{ &self.stage.as_str() }</span>
                     <input
                         type="text"
                         ref={&self.shuffle.node_ref}
@@ -229,10 +228,22 @@ impl Timer {
                     if !self.shuffle.sequence.is_empty() { <ShuffleDisplay dark={dm} shuffle={utils::chunk_vec(&self.shuffle.sequence)}/> }
                 </div>
                 <div class={"flex-row-container"}>
-                    <button class={classes!("timer-button", "toggle", dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ "Use and Continue (Space)" } </button>
-                    <button class={classes!("timer-button", "reset", dark_mode)} onclick={ctx.link().callback(|_| Message::GenerateShuffle)}>{ "Shuffle (r)" } </button>
+                    <button class={classes!("common-button", "toggle", dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ "Use and Continue (Space)" } </button>
+                    <button class={classes!("common-button", "reset", dark_mode)} onclick={ctx.link().callback(|_| Message::GenerateShuffle)}>{ "Shuffle (r)" } </button>
                 </div>
             </div>
+        }
+    }
+}
+
+impl Stage {
+    // represent the stage as a `&str`
+    pub fn as_str(&self) -> &str {
+        match self {
+            Stage::Solve => "Solve",
+            Stage::Inspection => "Inspection",
+            Stage::Finished => "Finished",
+            Stage::Shuffle => "Shuffle",
         }
     }
 }

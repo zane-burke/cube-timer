@@ -86,6 +86,11 @@ body.dark {
   color: var(--macchiato-text);
 }
 
+/***************************/
+/*                         */
+/*     Flex containers     */
+/*                         */
+/***************************/
 .flex-col-container {
   display: flex;
   flex-direction: column;
@@ -102,84 +107,33 @@ body.dark {
   overflow: auto;
 }
 
-.timer-button {
-  border: none;
-  display: inline-block;
-  padding: 0.8em;
-  margin: 0.5em 0 0.5em 0;
-  border-radius: 0.5em;
-  text-align: center;
-  text-decoration: none;
+.vertical-margin {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
-.timer-button.disabled {
-    background-color: var(--latte-overlay-2);
-}
-
-.timer-button.dark.disabled {
-    background-color: var(--macchiato-overlay-2);
-}
-
-.timer-button.disabled:hover {
-    cursor: not-allowed;
-    background-color: var(--latte-overlay-2);
-}
-
-.timer-button.disabled.dark:hover {
-    background-color: var(--macchiato-overlay-2);
-}
-
-.timer-button:hover {
-  cursor: pointer;
-}
-
-.toggle {
-  background-color: var(--latte-mauve);
-  color: var(--latte-base);
-  margin-right: 5px;
-}
-
-.toggle.dark {
-  background-color: var(--macchiato-mauve);
-  color: var(--macchiato-base);
-}
-
-.toggle:hover {
-  background-color: var(--macchiato-mauve);
-}
-
-.toggle.dark:hover {
-  background-color: var(--latte-mauve);
-}
-
-.reset {
-  background-color: var(--latte-red);
-  color: var(--latte-base);
+.horizontal-margin {
   margin-left: 0.5em;
+  margin-right: 0.5em;
 }
 
-.reset.dark {
-  background-color: var(--macchiato-red);
-  color: var(--macchiato-base);
-}
-
-.reset:hover {
-  background-color: var(--macchiato-red);
-}
-
-.reset.dark:hover {
-  background-color: var(--latte-red);
-}
-
+/* The timer display */
 .timer {
   font-size: 6em;
   font-family: "JetBrains Mono", monospace;
 }
 
+/* Used for a span that labels something */
 .span-label {
-    margin: 0.5em;
-    font-size: 1.5em;
+  margin: 0.5em;
+  font-size: 1.5em;
 }
+
+/******************/
+/*                */
+/*     Navbar     */
+/*                */
+/******************/
 
 .navbar {
   display: flex;
@@ -222,9 +176,10 @@ body.dark {
   background-color: var(--macchiato-surface-0);
 }
 
+/* Theme switching button */
 .theme-button {
   border: none;
-  display: flex;
+  display: inline-block;
   padding: 0.8em;
   margin: 0.5em 0.5em 0.5em 0.5em;
   border-radius: 0.5em;
@@ -232,7 +187,6 @@ body.dark {
   text-decoration: none;
   background-color: var(--latte-crust);
   color: var(--latte-text);
-  justify-content: center;
 }
 
 .theme-button.dark {
@@ -249,6 +203,11 @@ body.dark {
   background-color: var(--macchiato-surface-0);
 }
 
+/*********************/
+/*                   */
+/*     Input box     */
+/*                   */
+/*********************/
 .text-box {
   border: none;
   border-radius: 0.5em;
@@ -276,6 +235,12 @@ body.dark {
   border: 0.2em var(--macchiato-mauve) solid;
 }
 
+/*********************************/
+/*                               */
+/*     Error Message Display     */
+/*                               */
+/*********************************/
+
 .err-msg {
   color: var(--latte-red);
   margin: 0.5em 0 0 0;
@@ -284,6 +249,12 @@ body.dark {
 .err-msg.dark {
   color: var(--macchiato-red);
 }
+
+/***************************/
+/*                         */
+/*     Shuffle Display     */
+/*                         */
+/***************************/
 
 .shuffle-table {
   display: inline-block;
@@ -303,4 +274,120 @@ body.dark {
 
 .shuffle-cell.dark {
   background-color: var(--macchiato-mantle);
+}
+
+/*************************/
+/*                       */
+/*     Stats Display     */
+/*                       */
+/*************************/
+
+.stats-table {
+  display: inline-block;
+  margin: 0.5em;
+  border-spacing: 0.5em;
+  overflow: scroll;
+}
+
+/*******************/
+/*                 */
+/*     Buttons     */
+/*                 */
+/*******************/
+
+.common-button {
+  border: none;
+  display: inline-block;
+  padding: 0.8em;
+  border-radius: 0.5em;
+  text-align: center;
+  text-decoration: none;
+  margin: 0.5em;
+  background-color: var(--latte-crust);
+  color: var(--latte-text);
+}
+
+.common-button.dark {
+  background-color: var(--macchiato-mantle);
+  color: var(--macchiato-text);
+}
+
+.common-button:hover {
+  cursor: pointer;
+  background-color: var(--latte-surface-0);
+}
+
+.common-button.dark:hover {
+    background-color: var(--macchiato-surface-0);
+}
+
+.common-button.disabled {
+  background-color: var(--latte-overlay-2);
+}
+
+.common-button.dark.disabled {
+  background-color: var(--macchiato-overlay-2);
+}
+
+.common-button.disabled:hover {
+  cursor: not-allowed;
+  background-color: var(--latte-overlay-2);
+}
+
+.common-button.disabled.dark:hover {
+  background-color: var(--macchiato-overlay-2);
+}
+
+.common-button.download {
+  background-color: var(--latte-teal);
+  color: var(--latte-base);
+}
+
+.common-button.download.dark {
+  background-color: var(--macchiato-teal);
+  color: var(--macchiato-base);
+}
+
+.common-button.download:hover {
+  background-color: var(--macchiato-teal);
+}
+
+.common-button.download.dark:hover {
+  background-color: var(--latte-teal);
+}
+
+.common-button.toggle {
+  background-color: var(--latte-mauve);
+  color: var(--latte-base);
+}
+
+.common-button.toggle.dark {
+  background-color: var(--macchiato-mauve);
+  color: var(--macchiato-base);
+}
+
+.common-button.toggle:hover {
+  background-color: var(--macchiato-mauve);
+}
+
+.common-button.toggle.dark:hover {
+  background-color: var(--latte-mauve);
+}
+
+.common-button.danger {
+  background-color: var(--latte-red);
+  color: var(--latte-base);
+}
+
+.common-button.danger.dark {
+  background-color: var(--macchiato-red);
+  color: var(--macchiato-base);
+}
+
+.common-button.danger:hover {
+  background-color: var(--macchiato-red);
+}
+
+.common-button.danger.dark:hover {
+  background-color: var(--latte-red);
 }
