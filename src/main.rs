@@ -5,9 +5,9 @@ mod seq_gen;
 mod stats;
 mod timer;
 mod utils;
-mod shuffle;
 mod preferences;
 mod app;
+mod components;
 
 fn main() {
     console_error_panic_hook::set_once();
