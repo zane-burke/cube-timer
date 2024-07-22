@@ -1,6 +1,6 @@
 use yew::{classes, function_component, html, Html, Properties};
 
-use crate::history::{self, Solve};
+use crate::saving::{self, Solve};
 
 use super::solve_display::SolveDisplay;
 
@@ -13,7 +13,7 @@ pub struct HistoryViewProps {
 pub fn HistoryView(props: &HistoryViewProps) -> Html {
     let dark = props.dark;
     let dark_mode = dark.then_some("dark");
-    let history = history::retrieve_history()
+    let history = saving::retrieve_history()
         .history
         .into_iter()
         .rev()

@@ -1,7 +1,7 @@
 //! Stat-tracking interface
 
 use crate::components::history_view::HistoryView;
-use crate::history;
+use crate::saving;
 use crate::utils;
 use yew::classes;
 use yew::{html, Component, Context, Html, Properties};
@@ -32,7 +32,7 @@ impl Component for Stats {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Message::DeleteHistory => {
-                history::set_history(history::History::new());
+                saving::set_history(saving::History::new());
                 self.show_confirmation = !self.show_confirmation;
                 true
             }
@@ -63,23 +63,23 @@ impl Stats {
                     <tbody>
                         <tr>
                             <td>{"PB:"}</td>
-                            <td class="time-display">{ utils::time_string(history::get_pb()) }</td>
+                            <td class="time-display">{ utils::time_string(utils::get_pb()) }</td>
                         </tr>
                         <tr>
                             <td>{ "Average: " }</td>
-                            <td class="time-display">{ utils::time_string(history::get_avg()) }</td>
+                            <td class="time-display">{ utils::time_string(utils::get_avg()) }</td>
                         </tr>
                         <tr>
                             <td>{ "AO5: " }</td>
-                            <td class="time-display">{ utils::time_string(history::get_ao5()) }</td>
+                            <td class="time-display">{ utils::time_string(utils::get_ao5()) }</td>
                         </tr>
                         <tr>
                             <td>{ "AO50: " }</td>
-                            <td class="time-display">{ utils::time_string(history::get_ao(50)) }</td>
+                            <td class="time-display">{ utils::time_string(utils::get_ao(50)) }</td>
                         </tr>
                         <tr>
                             <td>{ "AO100: " }</td>
-                            <td class="time-display">{ utils::time_string(history::get_ao(100)) }</td>
+                            <td class="time-display">{ utils::time_string(utils::get_ao(100)) }</td>
                         </tr>
                     </tbody>
                 </table>
@@ -94,7 +94,9 @@ impl Stats {
                 }
 
                 <span class="span-label">{ "Solve History" }</span>
-                <HistoryView {dark} />
+                <div style="overflow:scroll;">
+                    <HistoryView {dark} />
+                </div>
             </div>
         }
     }

@@ -1,5 +1,8 @@
 //! Several useful functions that don't require direct access to anything
 
+use itertools::Itertools;
+use crate::{saving, utils};
+
 pub const INSPECTION_TIME: u64 = 15_000;
 
 const SECOND: u64 = 1_000;
@@ -74,4 +77,76 @@ pub fn date_string(timestamp: u64) -> String {
     let yyyy = date.get_full_year();
     
     format!("{dd}/{mm}/{yyyy}")
+}
+
+/// Gets the personal best
+pub fn get_pb() -> u64 {
+    let history = saving::retrieve_history().history;
+
+    match history.iter().min() {
+        Some(s) => s.solvetime,
+        None => u64::MIN,
+    }
+}
+
+/// Gets the average of the last five, minus the best and worst solves
+pub fn get_ao5() -> u64 {
+    let history = saving::retrieve_history().history;
+
+    if history.len() < 5 {
+        return 0;
+    }
+
+    let last_five: Vec<u64> = history
+        .iter()
+        .rev()
+        .take(5)
+        .map(|sv| sv.solvetime)
+        .collect();
+
+    let (min, max) = last_five.iter().copied().minmax().into_option().unwrap();
+
+    let sum: u64 = last_five.iter().copied().sum();
+
+    (sum - max - min) / 3
+
+    /*
+    7 -
+    8
+    9
+    10
+    11solvetime:79462
+    */
+}
+
+/// Gets the average over the last `n` solves, excluding the best and worst of those solves.
+pub fn get_ao(n: u64) -> u64 {
+    let n_usize: usize = n.try_into().unwrap();
+    let history = saving::retrieve_history().history;
+
+    if history.len() < n_usize {
+        return 0;
+    }
+
+    let times: Vec<u64> = history
+        .iter()
+        .rev()
+        .take(n_usize)
+        .map(|sv| sv.solvetime)
+        .collect();
+
+    let (min, max) = times.iter().copied().minmax().into_option().unwrap();
+
+    let sum: u64 = times.iter().copied().sum();
+
+    (sum - max - min) / (n - 2)
+}
+
+/// Gets the user's all-time average solve time
+pub fn get_avg() -> u64 {
+    let history = saving::retrieve_history().history;
+    let length = history.len();
+    let sum: u64 = history.iter().map(|sv| sv.solvetime).sum();
+
+    utils::saturating_div(sum, length as u64)
 }

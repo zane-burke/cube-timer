@@ -1,6 +1,6 @@
 # cube-timer
 
-The `yew` branch is a rewrite of the original Iced program created with Yew instead. It is not fully functional yet, which is why it is not the main branch.
+The `yew` branch is a rewrite of the original Iced program created with Yew and Tauri instead. It is not fully functional yet, which is why it is not the main branch.
 
 # Features
 

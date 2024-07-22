@@ -1,6 +1,6 @@
 #![recursion_limit = "1024"]
 
-mod history;
+mod saving;
 mod seq_gen;
 mod stats;
 mod timer;

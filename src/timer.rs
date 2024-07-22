@@ -1,7 +1,7 @@
 //! Main interface.
 //! Consists of both the timer and a shuffling screen.
 
-use crate::history;
+use crate::saving;
 use crate::components::shuffle_display::{Shuffle, ShuffleDisplay};
 use crate::utils;
 use gloo::events::EventListener;
@@ -182,7 +182,7 @@ impl Timer {
                 let et = self.end_time.unwrap();
                 let st = self.start_time.unwrap();
                 let solvetime = utils::saturating_sub(et, st);
-                history::save_solve(history::Solve::new(et, solvetime, self.shuffle.sequence.join(", ")));
+                saving::save_solve(saving::Solve::new(et, solvetime, self.shuffle.sequence.join(", ")));
                 self.reset();
             }
         }

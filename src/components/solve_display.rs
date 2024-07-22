@@ -1,6 +1,6 @@
 use yew::{function_component, html, Html, classes, Properties};
 
-use crate::{history::Solve, utils};
+use crate::{saving::Solve, utils};
 
 #[derive(Properties, PartialEq)]
 pub struct SolveProps {
