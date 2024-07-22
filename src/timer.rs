@@ -25,7 +25,6 @@ pub struct Timer {
 pub struct TimerProps {
     pub dark: bool,
 }
-
 pub enum Message {
     ToggleTimer,
     GenerateShuffle,
@@ -48,6 +47,7 @@ impl Component for Timer {
     fn create(ctx: &Context<Self>) -> Self {
         let handle = {
             let link = ctx.link().clone();
+            // 10ms interval
             Interval::new(10, move || link.send_message(Message::UpdateTime))
         };
 
@@ -198,7 +198,7 @@ impl Timer {
             <>
                 <div class={classes!("flex-col-container", dark_mode)}>
                     <span class="span-label">{ &self.stage.as_str() }</span>
-                    <span class={classes!("timer", dark_mode)}>{ &self.current_time }</span>
+                    <span class={classes!("main-timer", dark_mode)}>{ &self.current_time }</span>
                 </div>
                 <div class={"flex-row-container"}>
                     <button class={classes!("common-button", "toggle", disable_toggle, dark_mode)} onclick={ctx.link().callback(|_| Message::ToggleTimer)}>{ &self.toggle_label } </button>
