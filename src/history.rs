@@ -77,6 +77,11 @@ pub fn get_pb() -> u64 {
 /// Gets the average of the last five, minus the best and worst solves
 pub fn get_ao5() -> u64 {
     let history = retrieve_history().history;
+
+    if history.len() < 5 {
+        return 0;
+    }
+
     let last_five: Vec<u64> = history
         .iter()
         .rev()
@@ -84,18 +89,42 @@ pub fn get_ao5() -> u64 {
         .map(|sv| sv.solvetime)
         .collect();
 
-    let length = last_five.len();
-
-    // prevent further calculations of there isn't enough data to go off of (also means division is safe)
-    if length <= 2 {
-        return 0;
-    }
-
     let (min, max) = last_five.iter().copied().minmax().into_option().unwrap();
 
     let sum: u64 = last_five.iter().copied().sum();
 
-    (sum - max - min) / length as u64
+    (sum - max - min) / 3
+
+    /*
+    7 -
+    8
+    9
+    10
+    11solvetime:79462
+    */
+}
+
+/// Gets the average over the last `n` solves, excluding the best and worst of those solves.
+pub fn get_ao(n: u64) -> u64 {
+    let n_usize: usize = n.try_into().unwrap();
+    let history = retrieve_history().history;
+
+    if history.len() < n_usize {
+        return 0;
+    }
+
+    let times: Vec<u64> = history
+        .iter()
+        .rev()
+        .take(n_usize)
+        .map(|sv| sv.solvetime)
+        .collect();
+
+    let (min, max) = times.iter().copied().minmax().into_option().unwrap();
+
+    let sum: u64 = times.iter().copied().sum();
+
+    (sum - max - min) / (n - 2)
 }
 
 /// Gets the user's all-time average solve time
