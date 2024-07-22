@@ -65,3 +65,13 @@ pub fn time_string(time: u64) -> String {
 pub fn saturating_unwrap_sub(lhs: Option<u64>, rhs: Option<u64>) -> u64 {
     saturating_sub(lhs.unwrap_or(0), rhs.unwrap_or(0))
 }
+
+/// Converts the provided timestamp to a time and date string
+pub fn date_string(timestamp: u64) -> String {
+    let date = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(timestamp as f64));
+    let dd = date.get_date();
+    let mm = date.get_month();
+    let yyyy = date.get_full_year();
+    
+    format!("{dd}/{mm}/{yyyy}")
+}
