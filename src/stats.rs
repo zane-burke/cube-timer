@@ -1,8 +1,9 @@
 //! Stat-tracking interface
 
 use crate::history;
+use crate::history::Solve;
 use crate::utils;
-use yew::classes;
+use yew::{classes, function_component};
 use yew::{html, Component, Context, Html, Properties};
 
 pub struct Stats {
@@ -55,16 +56,24 @@ impl Component for Stats {
                 <table class="stats-table">
                     <tbody>
                         <tr>
-                            <td>{"All-time PB:"}</td>
-                            <td>{ utils::time_string(history::get_pb()) }</td>
+                            <td>{"PB:"}</td>
+                            <td class="time-display">{ utils::time_string(history::get_pb()) }</td>
                         </tr>
                         <tr>
-                            <td>{ "All-Time Average: " }</td>
-                            <td>{ utils::time_string(history::get_avg()) }</td>
+                            <td>{ "Average: " }</td>
+                            <td class="time-display">{ utils::time_string(history::get_avg()) }</td>
                         </tr>
                         <tr>
-                            <td>{ "Last Five Average: " }</td>
-                            <td>{ utils::time_string(history::get_ao5()) }</td>
+                            <td>{ "AO5: " }</td>
+                            <td class="time-display">{ utils::time_string(history::get_ao5()) }</td>
+                        </tr>
+                        <tr>
+                            <td>{ "AO50: " }</td>
+                            <td class="time-display">{ utils::time_string(history::get_ao(50)) }</td>
+                        </tr>
+                        <tr>
+                            <td>{ "AO100: " }</td>
+                            <td class="time-display">{ utils::time_string(history::get_ao(100)) }</td>
                         </tr>
                     </tbody>
                 </table>
@@ -77,7 +86,68 @@ impl Component for Stats {
                         <button class={classes!("common-button", dark_mode)} onclick={toggle}>{ "Cancel" }</button>
                     </div>
                 }
+
+                <span class="span-label">{ "Solve History" }</span>
+                <HistoryView {dark} />
             </div>
         }
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct HistoryViewProps {
+    pub dark: bool,
+}
+
+#[function_component]
+pub fn HistoryView(props: &HistoryViewProps) -> Html {
+    let dark = props.dark;
+    let dark_mode = dark.then_some("dark");
+    let history = history::retrieve_history()
+        .history
+        .into_iter()
+        .rev()
+        .collect::<Vec<Solve>>();
+
+    html! {
+        <table class="solve-table">
+            <tr class="solve-row">
+                <td class={classes!("solve-cell", dark_mode)}>
+                    { "DD/MM/YY" }
+                </td>
+                <td class={classes!("time-display", "solve-cell", dark_mode)}>
+                    { "Time" }
+                </td>
+            </tr>
+            {
+                history.into_iter().map(|solve| {
+                    html! {
+                        <SolveDisplay {solve} {dark}/>
+                    }
+                }).collect::<Html>()
+            }
+        </table>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct SolveProps {
+    pub solve: Solve,
+    pub dark: bool,
+}
+
+#[function_component]
+pub fn SolveDisplay(props: &SolveProps) -> Html {
+    let dark_mode = props.dark.then_some("dark");
+
+    html! {
+        <tr class="solve-row">
+            <td class={classes!("solve-cell", dark_mode)}>
+                { utils::date_string(props.solve.timestamp) }
+            </td>
+            <td class={classes!("time-display", "solve-cell", dark_mode)}>
+                { utils::time_string(props.solve.solvetime) }
+            </td>
+        </tr>
     }
 }
