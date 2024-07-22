@@ -118,8 +118,12 @@ body.dark {
 }
 
 /* The timer display */
-.timer {
+.main-timer {
   font-size: 6em;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.time-display {
   font-family: "JetBrains Mono", monospace;
 }
 
@@ -289,6 +293,38 @@ body.dark {
   overflow: scroll;
 }
 
+.solve-table {
+  border-spacing: 0 0.5em;
+  overflow: scroll;
+  width: 15em;
+}
+
+.solve-row {
+  border-radius: 0.5em;
+  border: none;
+}
+
+.solve-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.5em;
+  border-radius: 0.5em;
+  border: none;
+  background-color: var(--latte-crust);
+}
+
+.solve-cell:first-child {
+  border-radius: 0.5em 0 0 0.5em;
+}
+
+.solve-cell:last-child {
+  border-radius: 0 0.5em 0.5em 0;
+}
+
+.solve-cell.dark {
+  background-color: var(--macchiato-mantle);
+}
+
 /*******************/
 /*                 */
 /*     Buttons     */
@@ -318,7 +354,7 @@ body.dark {
 }
 
 .common-button.dark:hover {
-    background-color: var(--macchiato-surface-0);
+  background-color: var(--macchiato-surface-0);
 }
 
 .common-button.disabled {
