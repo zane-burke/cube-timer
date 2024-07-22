@@ -1,9 +1,9 @@
 //! Stat-tracking interface
 
+use crate::components::history_view::HistoryView;
 use crate::history;
-use crate::history::Solve;
 use crate::utils;
-use yew::{classes, function_component};
+use yew::classes;
 use yew::{html, Component, Context, Html, Properties};
 
 pub struct Stats {
@@ -44,6 +44,12 @@ impl Component for Stats {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        self.render_stats(ctx)
+    }
+}
+
+impl Stats {
+    fn render_stats(&self, ctx: &Context<Self>) -> Html {
         let dark = ctx.props().dark;
         let dark_mode = dark.then_some("dark");
 
@@ -91,63 +97,5 @@ impl Component for Stats {
                 <HistoryView {dark} />
             </div>
         }
-    }
-}
-
-#[derive(Properties, PartialEq)]
-pub struct HistoryViewProps {
-    pub dark: bool,
-}
-
-#[function_component]
-pub fn HistoryView(props: &HistoryViewProps) -> Html {
-    let dark = props.dark;
-    let dark_mode = dark.then_some("dark");
-    let history = history::retrieve_history()
-        .history
-        .into_iter()
-        .rev()
-        .collect::<Vec<Solve>>();
-
-    html! {
-        <table class="solve-table">
-            <tr class="solve-row">
-                <td class={classes!("solve-cell", dark_mode)}>
-                    { "DD/MM/YY" }
-                </td>
-                <td class={classes!("time-display", "solve-cell", dark_mode)}>
-                    { "Time" }
-                </td>
-            </tr>
-            {
-                history.into_iter().map(|solve| {
-                    html! {
-                        <SolveDisplay {solve} {dark}/>
-                    }
-                }).collect::<Html>()
-            }
-        </table>
-    }
-}
-
-#[derive(Properties, PartialEq)]
-pub struct SolveProps {
-    pub solve: Solve,
-    pub dark: bool,
-}
-
-#[function_component]
-pub fn SolveDisplay(props: &SolveProps) -> Html {
-    let dark_mode = props.dark.then_some("dark");
-
-    html! {
-        <tr class="solve-row">
-            <td class={classes!("solve-cell", dark_mode)}>
-                { utils::date_string(props.solve.timestamp) }
-            </td>
-            <td class={classes!("time-display", "solve-cell", dark_mode)}>
-                { utils::time_string(props.solve.solvetime) }
-            </td>
-        </tr>
     }
 }
