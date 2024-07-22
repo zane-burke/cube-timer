@@ -2,7 +2,7 @@
 //! Consists of both the timer and a shuffling screen.
 
 use crate::history;
-use crate::shuffle::{Shuffle, ShuffleDisplay};
+use crate::components::shuffle_display::{Shuffle, ShuffleDisplay};
 use crate::utils;
 use gloo::events::EventListener;
 use gloo::timers::callback::Interval;
@@ -179,8 +179,10 @@ impl Timer {
                 }
             },
             Stage::Finished => {
-                let solvetime = utils::saturating_unwrap_sub(self.end_time, self.start_time);
-                history::save_solve(history::Solve::new(self.end_time.unwrap(), solvetime, self.shuffle.sequence.join(", ")));
+                let et = self.end_time.unwrap();
+                let st = self.start_time.unwrap();
+                let solvetime = utils::saturating_sub(et, st);
+                history::save_solve(history::Solve::new(et, solvetime, self.shuffle.sequence.join(", ")));
                 self.reset();
             }
         }
@@ -238,6 +240,7 @@ impl Timer {
 
 impl Stage {
     // represent the stage as a `&str`
+    // used to display the label above the timer.
     pub fn as_str(&self) -> &str {
         match self {
             Stage::Solve => "Solve",
